@@ -5,7 +5,7 @@ from .pdf import extract_pdf_pages
 from .chunking import chunk_text
 from .llm import embed_texts
 from .entity_extract import extract_entities_from_chunk
-from .metadata_extract import extract_paper_metadata
+from .metadata_extract import extract_paper_metadata, assign_chunk_sections
 
 def ingest_pdf(user_id: str, pdf_path: str, title: str) -> tuple[str, dict]:
     drv = get_driver()
@@ -24,6 +24,8 @@ def ingest_pdf(user_id: str, pdf_path: str, title: str) -> tuple[str, dict]:
                 "page": page_no,
                 "text": ch,
             })
+
+    assign_chunk_sections(pages, chunk_rows)
 
     with drv.session() as s:
         s.run(
@@ -67,6 +69,7 @@ def ingest_pdf(user_id: str, pdf_path: str, title: str) -> tuple[str, dict]:
               doc_id: c.doc_id,
               page: c.page,
               text: c.text,
+              section: c.section,
               embedding: c.embedding
             })
             MERGE (d)-[:HAS_CHUNK]->(ch)

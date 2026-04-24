@@ -98,3 +98,60 @@ def _extract_section_headings(text: str) -> list[str]:
             seen.add(key)
             headings.append(heading)
     return headings
+
+
+# Maps the bare section name captured by group(1) of _SECTION_RE to a
+# canonical label used as the Chunk.section property in Neo4j.
+_SECTION_CANONICAL: dict[str, str] = {
+    "abstract":           "abstract",
+    "introduction":       "introduction",
+    "related work":       "background",
+    "background":         "background",
+    "preliminaries":      "background",
+    "methodology":        "method",
+    "methods":            "method",
+    "method":             "method",
+    "approach":           "method",
+    "experiments":        "experiments",
+    "experimental setup": "experiments",
+    "evaluation":         "experiments",
+    "results":            "results",
+    "findings":           "results",
+    "discussion":         "discussion",
+    "analysis":           "discussion",
+    "conclusion":         "conclusion",
+    "conclusions":        "conclusion",
+    "summary":            "conclusion",
+    "limitations":        "limitations",
+    "future work":        "limitations",
+    "references":         "references",
+    "bibliography":       "references",
+    "acknowledgements":   "references",
+    "acknowledgement":    "references",
+}
+
+
+def _normalize_section(bare_name: str) -> str:
+    """Map a bare section name (group 1 of _SECTION_RE, lowercased) to a canonical label."""
+    return _SECTION_CANONICAL.get(bare_name.lower().strip(), "unknown")
+
+
+def assign_chunk_sections(pages: list[tuple[int, str]], chunk_rows: list[dict]) -> None:
+    """
+    Assign a canonical 'section' label to each chunk dict in-place.
+
+    Walks pages in document order. When _SECTION_RE detects a heading on a
+    page, all subsequent chunks (including those on that page) inherit that
+    label.  Chunks before the first heading receive "unknown".
+    """
+    page_section: dict[int, str] = {}
+    current = "unknown"
+
+    for page_no, page_text in pages:
+        match = _SECTION_RE.search(page_text)
+        if match:
+            current = _normalize_section(match.group(1))
+        page_section[page_no] = current
+
+    for chunk in chunk_rows:
+        chunk["section"] = page_section.get(chunk["page"], "unknown")

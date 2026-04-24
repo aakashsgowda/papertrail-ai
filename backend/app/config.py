@@ -16,6 +16,8 @@ class Settings(BaseModel):
 
   top_k: int = int(os.getenv("TOP_K", "8"))
   expand_k: int = int(os.getenv("EXPAND_K", "12"))
+  vector_fetch_multiplier: int = int(os.getenv("VECTOR_FETCH_MULTIPLIER", "5"))
+  max_entity_degree: int = int(os.getenv("MAX_ENTITY_DEGREE", "50"))
   chunk_size: int = int(os.getenv("CHUNK_SIZE", '1200'))
   overlap_size: int = int(os.getenv("CHUNK_OVERLAP", '200'))
 

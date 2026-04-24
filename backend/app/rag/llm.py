@@ -72,6 +72,40 @@ Rewritten standalone question (return ONLY the rewritten question, nothing else)
   return rewritten if rewritten else question
 
 
+def classify_question_intent(question: str) -> str:
+  """
+  Classify what section of a research paper the question targets.
+  Returns one of: "method", "results", "background", "limitations", "general".
+  Falls back to "general" on any failure so retrieval always continues.
+  """
+  client = get_client()
+
+  prompt = f"""
+You are a classifier for research paper questions.
+Classify the question into exactly ONE of these categories:
+
+- method      : asks about how something was done — approach, algorithm, architecture, training
+- results     : asks about performance, metrics, scores, comparisons, what was achieved
+- background  : asks about prior work, motivation, definitions, related work, context
+- limitations : asks about weaknesses, failure cases, future work, what doesn't work
+- general     : does not clearly fit any of the above
+
+Respond with EXACTLY one word from this list: method, results, background, limitations, general
+
+Question: {question}
+""".strip()
+
+  try:
+    resp = client.models.generate_content(model=settings.gen_model, contents=prompt)
+    text = (resp.text if hasattr(resp, "text") and resp.text else "").strip().lower()
+    for label in ("method", "results", "background", "limitations"):
+      if label in text:
+        return label
+  except Exception:
+    pass
+  return "general"
+
+
 def classify_question(question: str) -> dict:
   """Ask the LLM whether this is a greeting/casual message or a real question needing documents."""
   client = get_client()

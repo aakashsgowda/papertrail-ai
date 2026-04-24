@@ -13,6 +13,7 @@ def init_schema():
     s.run("CREATE CONSTRAINT chunk_id_unique IF NOT EXISTS FOR (c:Chunk) REQUIRE c.chunk_id IS UNIQUE")
     s.run("CREATE INDEX chunk_user_idx IF NOT EXISTS FOR (c:Chunk) ON (c.user_id)")
     s.run("CREATE INDEX chunk_doc_idx IF NOT EXISTS FOR (c:Chunk) ON (c.doc_id)")
+    s.run("CREATE INDEX chunk_section_idx IF NOT EXISTS FOR (c:Chunk) ON (c.section)")
 
     s.run("CREATE CONSTRAINT entity_user_name_unique IF NOT EXISTS FOR (e:Entity) REQUIRE (e.user_id, e.name) IS UNIQUE")
     s.run("CREATE INDEX entity_user_idx IF NOT EXISTS FOR (e:Entity) ON (e.user_id)")
